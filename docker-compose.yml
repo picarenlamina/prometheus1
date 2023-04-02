@@ -9,46 +9,27 @@ services:
       - mynet
     volumes: 
       - mysql:/var/lib/mysql
-    environment: 
-      - MYSQL_ROOT_PASSWORD= password
-      - MYSQL_DATABASE= db
-      - MYSQL_USER= user
-      - MYSQL_PASSWORD= password
-    command: --default-authentication-plugin=mysql_native_password
+     environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=database
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password    
+    #command: --default-authentication-plugin=mysql_native_password
     ports: 
       - 3306:3306
       - 33060:33060
 
-  #Adminer equivalente phpAdmin
-  adminer:
-    image: adminer
-    restart: always
+   phpmyadmin:
+    image: phpmyadmin
+    ports:
+      - 8080:80
+    environment:
+      - PMA_HOST=mysql
     depends_on:
       - mysql
-    environment:
-      ADMINER_DEFAULT_DB_DRIVER: mysql
-      ADMINER_DEFAULT_DB_HOST: mysql
-      #ADMINER_DEFAULT_DB_NAME: adminer
-      #ADMINER_DESIGN: nette
-      #ADMINER_PLUGINS: tables-filter tinymce
-    ports:
-      - 8080:9000ports: 
-      -  8080:8080
     networks:
       - mynet
-
- adminer:
-    image: $IMAGE
-    depends_on:
-      - mariadb
-    environment:
-      ADMINER_DEFAULT_DB_DRIVER: mysql
-      ADMINER_DEFAULT_DB_HOST: mariadb
-      ADMINER_DEFAULT_DB_NAME: adminer
-      ADMINER_DESIGN: nette
-      ADMINER_PLUGINS: tables-filter tinymce
-    ports:
-      - 8080:9000
+ 
 
   prometheus:
     image: prom/prometheus
