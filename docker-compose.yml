@@ -1,0 +1,93 @@
+version: '3'
+
+services:
+  mysql:
+    image: mysql
+    container_name: mysql
+    restart: always
+    networks:
+      - mynet
+    volumes: 
+      - mysql:/var/lib/mysql
+    environment: 
+      - MYSQL_ROOT_PASSWORD= password
+      - MYSQL_DATABASE= db
+      - MYSQL_USER= user
+      - MYSQL_PASSWORD= password
+    command: --default-authentication-plugin=mysql_native_password
+    ports: 
+      - 3306:3306
+      - 33060:33060
+
+  #Adminer equivalente phpAdmin
+  adminer:
+    image: adminer
+    restart: always
+    depends_on:
+      - mysql
+    environment:
+      ADMINER_DEFAULT_DB_DRIVER: mysql
+      ADMINER_DEFAULT_DB_HOST: mysql
+      #ADMINER_DEFAULT_DB_NAME: adminer
+      #ADMINER_DESIGN: nette
+      #ADMINER_PLUGINS: tables-filter tinymce
+    ports:
+      - 8080:9000ports: 
+      -  8080:8080
+    networks:
+      - mynet
+
+ adminer:
+    image: $IMAGE
+    depends_on:
+      - mariadb
+    environment:
+      ADMINER_DEFAULT_DB_DRIVER: mysql
+      ADMINER_DEFAULT_DB_HOST: mariadb
+      ADMINER_DEFAULT_DB_NAME: adminer
+      ADMINER_DESIGN: nette
+      ADMINER_PLUGINS: tables-filter tinymce
+    ports:
+      - 8080:9000
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    networks:
+      - mynet
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command: 
+      - --config.file=/etc/promepastheus/prometheus.yml
+
+  mysql-exporter:
+    image: prom/mysqld-exporter
+    container_name: mysql-exporter
+    ports:
+      - 9104:9104
+    networks:
+      - mynet
+    volumes:
+      - ./mysql-exporter/.my.cnf:/root/.my.cnf
+    environment: 
+      - DATA_SOURCE_NAME='user:password@(localhost:9104)/db'
+      - collect.info_schema.tablestats=true
+      - collect.info_schema.userstats=true
+      - collect.info_schema.query_response_time=true
+      - collect.auto_increment.columns=true
+      - collect.binlog_size=true
+      - collect.perf_schema.eventsstatements=true
+      - collect.perf_schema.eventswaits=true
+      - collect.perf_schema.file_events=true
+      - collect.perf_schema.indexiowaits=true
+      - collect.perf_schema.tableiowaits=true
+      - collect.perf_schema.tablelocks=true
+    depends_on: 
+      - mysql
+networks:
+  mynet:
+    driver: bridge
+volumes:
+  mysql:
