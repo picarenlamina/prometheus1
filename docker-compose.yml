@@ -58,7 +58,7 @@ services:
     volumes:
       - ./mysql-exporter/.my.cnf:/root/.my.cnf
     environment: 
-      - DATA_SOURCE_NAME='user:password@(mysql:3306)/database'
+      - DATA_SOURCE_NAME='root:password@(mysql:3306)/database'
       - collect.info_schema.tablestats=true
       - collect.info_schema.userstats=true
       - collect.info_schema.query_response_time=true
