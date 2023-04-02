@@ -1,0 +1,77 @@
+version: '3'
+
+services:
+  mysql:
+    image: mysql
+    container_name: mysql
+    restart: always
+    networks:
+      - mynet
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=database
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password    
+    command: 
+      --default-authentication-plugin=mysql_native_password
+    ports: 
+      - 3306:3306
+      - 33060:33060
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+  
+
+  phpmyadmin:
+    image: phpmyadmin
+    ports:
+      - 8080:80
+    environment:
+      - PMA_HOST=mysql
+    depends_on:
+      - mysql
+    networks:
+      - mynet
+ 
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    networks:
+      - mynet
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command: 
+      - --config.file=/etc/prometheus/prometheus.yml
+    depends_on:
+      - mysql
+
+  mysql-exporter:
+    image: prom/mysqld-exporter
+    container_name: mysql-exporter
+    ports:
+      - 9104:9104
+    networks:
+      - mynet
+    volumes:
+      - ./mysql-exporter/.my.cnf:/root/.my.cnf
+    environment: 
+      - DATA_SOURCE_NAME='root:password@(mysql:3306)/database'
+      - collect.info_schema.tablestats=true
+      - collect.info_schema.userstats=true
+      - collect.info_schema.query_response_time=true
+      - collect.auto_increment.columns=true
+      - collect.binlog_size=true
+      - collect.perf_schema.eventsstatements=true
+      - collect.perf_schema.eventswaits=true
+      - collect.perf_schema.file_events=true
+      - collect.perf_schema.indexiowaits=true
+      - collect.perf_schema.tableiowaits=true
+      - collect.perf_schema.tablelocks=true
+    depends_on: 
+      - mysql
+networks:
+  mynet:
+    driver: bridge
