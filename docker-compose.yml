@@ -7,9 +7,7 @@ services:
     restart: always
     networks:
       - mynet
-    volumes: 
-      - mysql:/var/lib/mysql
-     environment:
+    environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=database
       - MYSQL_USER=user
@@ -18,8 +16,12 @@ services:
     ports: 
       - 3306:3306
       - 33060:33060
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+  
 
-   phpmyadmin:
+  phpmyadmin:
     image: phpmyadmin
     ports:
       - 8080:80
@@ -42,6 +44,8 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     command: 
       - --config.file=/etc/promepastheus/prometheus.yml
+    depends_on:
+      - mysql
 
   mysql-exporter:
     image: prom/mysqld-exporter
@@ -53,7 +57,7 @@ services:
     volumes:
       - ./mysql-exporter/.my.cnf:/root/.my.cnf
     environment: 
-      - DATA_SOURCE_NAME='user:password@(localhost:9104)/db'
+      - DATA_SOURCE_NAME='user:password@(mysql:3306)/database'
       - collect.info_schema.tablestats=true
       - collect.info_schema.userstats=true
       - collect.info_schema.query_response_time=true
@@ -70,5 +74,3 @@ services:
 networks:
   mynet:
     driver: bridge
-volumes:
-  mysql:
