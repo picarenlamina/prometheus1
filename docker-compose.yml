@@ -3,7 +3,7 @@ version: '3'
 services:
   sql:
     image: mysql
-    container_name: mysql
+    container_name: sql
     restart: always
     networks:
       - mynet
